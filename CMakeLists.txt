@@ -391,6 +391,8 @@ add_library(livekit SHARED
   src/rpc_error.cpp
   src/video_frame.cpp
   src/video_source.cpp
+  src/encoded_video_frame.cpp
+  src/encoded_video_stream.cpp
   src/video_stream.cpp
   src/local_video_track.cpp
   src/remote_video_track.cpp

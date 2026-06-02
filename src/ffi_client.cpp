@@ -40,8 +40,32 @@ inline void logAndThrow(const std::string& error_msg) {
   throw std::runtime_error(error_msg);
 }
 
+void forwardRustLog(const proto::LogRecord& record) {
+  const std::string message = "[rust:" + record.target() + "] " + record.message();
+  switch (record.level()) {
+    case proto::LOG_ERROR:
+      LK_LOG_ERROR("{}", message);
+      break;
+    case proto::LOG_WARN:
+      LK_LOG_WARN("{}", message);
+      break;
+    case proto::LOG_INFO:
+      LK_LOG_INFO("{}", message);
+      break;
+    case proto::LOG_DEBUG:
+      LK_LOG_DEBUG("{}", message);
+      break;
+    case proto::LOG_TRACE:
+      LK_LOG_TRACE("{}", message);
+      break;
+    default:
+      LK_LOG_INFO("{}", message);
+      break;
+  }
+}
+
 Result<proto::OwnedDataTrackStream, SubscribeDataTrackError> subscribeDataTrackFailure(SubscribeDataTrackErrorCode code,
-                                                                                       const std::string& message) {
+                                                                                        const std::string& message) {
   LK_LOG_WARN("Subscribe data track failed: code={} message={}", static_cast<std::uint32_t>(code), message);
   return Result<proto::OwnedDataTrackStream, SubscribeDataTrackError>::failure(SubscribeDataTrackError{code, message});
 }
@@ -124,6 +148,7 @@ std::optional<FfiClient::AsyncId> ExtractAsyncId(const proto::FfiEvent& event) {
     // NOT async completion:
     case E::kRoomEvent:
     case E::kTrackEvent:
+    case E::kEncodedVideoStreamEvent:
     case E::kVideoStreamEvent:
     case E::kAudioStreamEvent:
     case E::kByteStreamReaderEvent:
@@ -219,6 +244,18 @@ proto::FfiResponse FfiClient::sendRequest(const proto::FfiRequest& request) cons
 }
 
 void FfiClient::pushEvent(const proto::FfiEvent& event) const {
+  if (event.message_case() == proto::FfiEvent::kLogs) {
+    for (const auto& record : event.logs().records()) {
+      forwardRustLog(record);
+    }
+    return;
+  }
+
+  if (event.message_case() == proto::FfiEvent::kPanic) {
+    LK_LOG_ERROR("[rust-panic] {}", event.panic().message());
+    return;
+  }
+
   std::unique_ptr<PendingBase> to_complete;
   std::vector<Listener> listeners_copy;
   {
