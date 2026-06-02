@@ -186,11 +186,6 @@ void VideoStream::onFfiEvent(const proto::FfiEvent& event) {
   // Handle frame_received or eos.
   if (vse.has_frame_received()) {
     const auto& fr = vse.frame_received();
-    LK_LOG_INFO("VideoStream event: handle={} ts={} rotation={} w={} h={} type={} components={} data_ptr={}",
-                vse.stream_handle(), fr.timestamp_us(), static_cast<int>(fr.rotation()),
-                fr.buffer().info().width(), fr.buffer().info().height(),
-                static_cast<int>(fr.buffer().info().type()), fr.buffer().info().components_size(),
-                fr.buffer().info().data_ptr());
 
     // Convert owned buffer->VideoFrame via a helper.
     // You should implement this static function in your VideoFrame class.
