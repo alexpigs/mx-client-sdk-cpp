@@ -135,6 +135,7 @@ void EncodedVideoStream::initFromTrack(const std::shared_ptr<Track>& track,
   nes->set_queue_size_frames(static_cast<uint32_t>(capacity_));
   nes->set_tap_position(
       static_cast<proto::EncodedVideoStreamTapPosition>(options.tap_position));
+  nes->set_drop_after_tap(options.drop_after_tap);
 
   auto resp = FfiClient::instance().sendRequest(req);
   if (!resp.has_new_encoded_video_stream()) {

@@ -65,6 +65,9 @@ class LIVEKIT_API EncodedVideoStream {
 
     /// Where in the receiver transformer chain to tap.
     TapPosition tap_position{TapPosition::PostDecrypt};
+
+    /// When true, tapped frames are not forwarded to WebRTC's decoder.
+    bool drop_after_tap{false};
   };
 
   /// Factory: create an EncodedVideoStream bound to a specific remote video Track.
